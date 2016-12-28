@@ -129,6 +129,9 @@ class WFile{
         else
             return file_put_contents( $this->__file_name, $content ) !== false;
     }
+    public function append($content){
+        return file_put_contents( $this->__file_name, $content, FILE_APPEND ) !== false;
+    }
 
     public function delete(){
         unlink( $this->__file_name );
