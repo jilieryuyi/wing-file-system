@@ -136,5 +136,8 @@ class WFile{
     public function delete(){
         unlink( $this->__file_name );
     }
+    public function read(){
+        return file_get_contents($this->__file_name);
+    }
 
 }
