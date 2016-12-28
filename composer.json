@@ -1,0 +1,25 @@
+{
+    "name": "wing/filesystem",
+    "type": "library",
+    "description": "php file system",
+    "keywords": ["php", "file"],
+    "homepage": "http://www.itdfy.com/",
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/jilieryuyi/wing-file-system"
+    },
+    "authors": [
+        {
+            "name": "yuyi",
+            "email": "297341015@qq.com",
+            "homepage": "http://www.itdfy.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.0"
+    },
+
+    "autoload": {
+        "psr-4": {"Wing\\FileSystem\\": "/"}
+    }
+}
