@@ -1,0 +1,9 @@
+/vendor/
+/.idea/
+/composer.lock
+/.DS_Store
+/src/Doc/.DS_Store
+/src/.DS_Store
+/*.log
+/cache
+/demo/doc
