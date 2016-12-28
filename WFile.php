@@ -130,4 +130,8 @@ class WFile{
             return file_put_contents( $this->__file_name, $content ) !== false;
     }
 
+    public function delete(){
+        unlink( $this->__file_name );
+    }
+
 }
