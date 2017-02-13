@@ -44,6 +44,9 @@ class WFile{
     public function get(){
         return $this->__file_name;
     }
+    public function getFilePath(){
+        return $this->__file_name;
+    }
 
     /**
      * @深度创建文件
