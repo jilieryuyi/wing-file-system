@@ -133,10 +133,12 @@ class WFile{
             if( !$append )
                 $mode = 'w+';
 
-            $fp = fopen($this->__file_name, $mode);
             if (!is_writable($this->__file_name)) {
                 return false;
             }
+
+            $fp = fopen($this->__file_name, $mode);
+
             flock($fp, LOCK_EX);// 加锁
             fwrite($fp, $content);
             flock($fp, LOCK_UN);// 解锁
