@@ -126,21 +126,46 @@ class WFile{
     }
 
     public function write( $content, $append = true ){
-        $this->touch();
-        if( $append )
-            return file_put_contents( $this->__file_name, $content, FILE_APPEND ) !== false;
-        else
-            return file_put_contents( $this->__file_name, $content ) !== false;
+        try {
+            $this->touch();
+
+            $mode = 'a+';
+            if( !$append )
+                $mode = 'w+';
+
+            $fp = fopen($this->__file_name, $mode);
+            if (!is_writable($this->__file_name)) {
+                return false;
+            }
+            flock($fp, LOCK_EX);// 加锁
+            fwrite($fp, $content);
+            flock($fp, LOCK_UN);// 解锁
+            fclose($fp);
+            return true;
+        }catch(\Exception $e){
+            var_dump($e);
+            return false;
+        }
+
     }
     public function append($content){
-        return file_put_contents( $this->__file_name, $content, FILE_APPEND ) !== false;
+        return $this->write($content);//file_put_contents( $this->__file_name, $content, FILE_APPEND ) !== false;
     }
 
     public function delete(){
         unlink( $this->__file_name );
     }
     public function read(){
-        return file_get_contents($this->__file_name);
+
+        $fh = fopen( $this->__file_name, 'r');
+        $content = "";
+        if( $fh ){
+            while( !feof($fh) ) {
+                $content .= fgets($fh);
+            }
+            fclose( $fh );
+        }
+        return $content;
     }
 
 }
