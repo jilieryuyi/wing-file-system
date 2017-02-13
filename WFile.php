@@ -125,7 +125,7 @@ class WFile{
         return $res;
     }
 
-    public function write( $content, $append = true ){
+    public function write( $content, $append = true, $lock_wait_timeout = 3 /*秒*/ ){
         try {
             $this->touch();
 
@@ -133,20 +133,32 @@ class WFile{
             if( !$append )
                 $mode = 'w+';
 
+            //锁等待 最大时间三秒
+            $start_time = time();
+            while(!is_writable($this->__file_name)){
+                usleep(1000);
+                if( (time()-$start_time) > $lock_wait_timeout )
+                {
+                    break;
+                }
+            }
+
             if (!is_writable($this->__file_name)) {
-                return false;
+                return 0;
             }
 
             $fp = fopen($this->__file_name, $mode);
-
-            flock($fp, LOCK_EX);// 加锁
-            fwrite($fp, $content);
-            flock($fp, LOCK_UN);// 解锁
-            fclose($fp);
-            return true;
+            if( $fp ) {
+                flock($fp, LOCK_EX);// 加锁
+                $success = fwrite($fp, $content);
+                flock($fp, LOCK_UN);// 解锁
+                fclose($fp);
+                return $success;
+            }
+            return 0;
         }catch(\Exception $e){
             var_dump($e);
-            return false;
+            return 0;
         }
 
     }
