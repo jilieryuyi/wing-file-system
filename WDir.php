@@ -32,6 +32,10 @@ class WDir{
         return $this->__path;
     }
 
+    public function isWrite(){
+        return is_writeable( $this->__path );
+    }
+
     public function __get( $name ){
         if( $name == "path")
             $this->path     = new WDir($this->__info["dirname"]);
