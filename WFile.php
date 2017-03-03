@@ -172,12 +172,15 @@ class WFile{
     public function read(){
 
         $fh = fopen( $this->__file_name, 'r');
+
         $content = "";
         if( $fh ){
+            flock($fh, LOCK_EX);// 加锁
             while( !feof($fh) ) {
                 $content .= fgets($fh);
             }
-            fclose( $fh );
+            flock($fh, LOCK_UN);// 解锁
+            fclose($fh);
         }
         return $content;
     }
