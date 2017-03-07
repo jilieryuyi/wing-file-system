@@ -1,20 +1,21 @@
 <?php namespace Wing\FileSystem;
 
-
 /**
  * Created by PhpStorm.
  * User: yuyi
  * Date: 16/11/8
  * Time: 08:05
  *
- * @文件操作类
+ * 文件操作类
+ *
  * @property string $__file_name
  * @property string $file_name 文件名带扩展
  * @property string $ext 扩展
  * @property Wdir $path 文件所在路径
  * @property int $size 文件大小 字节数
  */
-class WFile{
+class WFile
+{
 
     private $__file_name;
     public $file_name;
@@ -22,15 +23,25 @@ class WFile{
     public $path;
     public $size; //字节数
 
-    public function __construct( $file_name )
+    /**
+     * 构造函数
+     *
+     * @param string $file_name 文件
+     */
+    public function __construct($file_name)
     {
-        if( $file_name instanceof self )
+        if ($file_name instanceof self)
             $file_name = $file_name->get();
+
         $file_name = str_replace("\\","/",$file_name);
         $this->init( $file_name );
     }
 
-
+    /**
+     * 初始化
+     *
+     * @param string $file_name
+     */
     private function init($file_name){
         unset($this->path);
         $info              = pathinfo( $file_name );
@@ -41,21 +52,34 @@ class WFile{
         $this->size        = file_exists( $file_name ) ? filesize( $file_name ) : 0;
     }
 
-    public function get(){
-        return $this->__file_name;
-    }
-    public function getFilePath(){
+    /**
+     * 获取文件名原始数据
+     *
+     * @return string
+     */
+    public function get()
+    {
         return $this->__file_name;
     }
 
     /**
-     * @深度创建文件
+     * 获取文件路径
+     *
+     * @return string
+     */
+    public function getFilePath()
+    {
+        return $this->__file_name;
+    }
+
+    /**
+     * 深度创建文件，目录不存在时自动创建
      *
      * @param string $file_name 需要创建的文件路径
      * @return bool
      */
     public function touch(){
-        if( file_exists( $this->__file_name ))
+        if (file_exists( $this->__file_name))
             return true;
         $this->path->mkdir();
         $success    = touch( $this->__file_name );
@@ -63,7 +87,13 @@ class WFile{
         return $success;
     }
 
-    public function exists(){
+    /**
+     * 判断文件是否存在
+     *
+     * @return bool
+     */
+    public function exists()
+    {
         return file_exists($this->__file_name);
     }
 
@@ -74,22 +104,22 @@ class WFile{
      * @param bool $rf 如果已存在 是否覆盖 默认为false 不覆盖
      * @return bool
      */
-    public function copyTo( $file_name, $rf = false ){
+    public function copyTo($file_name, $rf = false)
+    {
 
-        if( $file_name instanceof self )
+        if ($file_name instanceof self)
             $file_name = $file_name->get();
 
         $file_name = str_replace("\\","/",$file_name);
-        if( is_dir( $file_name ))
-        {
+        if (is_dir($file_name)) {
             $file_name = rtrim( $file_name,"/");
             $file_name = $file_name."/".$this->file_name;
         }
 
-        if( !$rf && file_exists( $file_name ))
+        if (!$rf && file_exists($file_name))
             return false;
 
-        if(!$this->exists())
+        if (!$this->exists())
             $this->touch();
 
         $file = new self($file_name);
@@ -104,41 +134,49 @@ class WFile{
      * @param string $file_name 目标文件路径 如D:/123.txt
      * @param bool $rf 如果文件已存在是否覆盖，默认为否
      */
-    public function moveTo( $file_name, $rf = false ){
+    public function moveTo($file_name, $rf = false)
+    {
 
-        if( $file_name instanceof self )
+        if ($file_name instanceof self)
             $file_name = $file_name->get();
 
-        if( file_exists( $file_name ) && !$rf )
+        if (file_exists($file_name) && !$rf)
             return false;
 
         $file_name = str_replace("\\","/",$file_name);
         $file = new self($file_name);
         $file->path->mkdir();
 
-
         $res = rename($this->__file_name, $file_name);
 
-        if( $res ){
+        if ($res){
             $this->init( $file_name );
         }
         return $res;
     }
 
-    public function write( $content, $append = true, $lock_wait_timeout = 3 /*秒*/ ){
+    /**
+     * 写入文件
+     *
+     * @param string $content 写入内容
+     * @param bool $append 是否追加写入，默认为true，追加写入
+     * @param int $lock_wait_timeout 锁等待超时时间
+     * @return int
+     */
+    public function write($content, $append = true, $lock_wait_timeout = 3 /*秒*/)
+    {
         try {
             $this->touch();
 
             $mode = 'a+';
-            if( !$append )
+            if (!$append)
                 $mode = 'w+';
 
             //锁等待 最大时间三秒
             $start_time = time();
-            while(!is_writable($this->__file_name)){
+            while (!is_writable($this->__file_name)) {
                 usleep(1000);
-                if( (time()-$start_time) > $lock_wait_timeout )
-                {
+                if ((time()-$start_time) > $lock_wait_timeout) {
                     break;
                 }
             }
@@ -148,7 +186,7 @@ class WFile{
             }
 
             $fp = fopen($this->__file_name, $mode);
-            if( $fp ) {
+            if ($fp) {
                 flock($fp, LOCK_EX);// 加锁
                 $success = fwrite($fp, $content);
                 flock($fp, LOCK_UN);// 解锁
@@ -156,27 +194,47 @@ class WFile{
                 return $success;
             }
             return 0;
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             var_dump($e);
             return 0;
         }
-
-    }
-    public function append($content){
-        return $this->write($content);//file_put_contents( $this->__file_name, $content, FILE_APPEND ) !== false;
     }
 
-    public function delete(){
-        unlink( $this->__file_name );
+    /**
+     * 追加写入文件内容
+     *
+     * @param string $content
+     * @return int
+     */
+    public function append($content)
+    {
+        return $this->write($content);
     }
-    public function read(){
 
-        $fh = fopen( $this->__file_name, 'r');
+    /**
+     * 删除文件
+     *
+     * @return bool
+     */
+    public function delete()
+    {
+        return unlink($this->__file_name);
+    }
 
+    /**
+     * 读取文件
+     *
+     * @return string
+     */
+    public function read()
+    {
+
+        $fh      = fopen( $this->__file_name, 'r');
         $content = "";
-        if( $fh ){
+
+        if ($fh) {
             flock($fh, LOCK_EX);// 加锁
-            while( !feof($fh) ) {
+            while (!feof($fh)) {
                 $content .= fgets($fh);
             }
             flock($fh, LOCK_UN);// 解锁
