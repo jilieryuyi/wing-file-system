@@ -1,6 +1,6 @@
 <?php namespace Wing\FileSystem;
 /**
- * @文件夹处理类
+ * 文件夹处理类
  * Created by PhpStorm.
  * User: yuyi
  * Date: 16/11/8
