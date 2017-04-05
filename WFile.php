@@ -30,8 +30,9 @@ class WFile
      */
     public function __construct($file_name)
     {
-        if ($file_name instanceof self)
-            $file_name = $file_name->get();
+        if ($file_name instanceof self) {
+            $file_name = $file_name->getFileName();
+        }
 
         $file_name = str_replace("\\","/",$file_name);
         $this->init( $file_name );
@@ -61,6 +62,18 @@ class WFile
     {
         return $this->__file_name;
     }
+    public function getFileName()
+    {
+        return $this->__file_name;
+    }
+    public function getBaseFileName()
+    {
+        return $this->file_name;
+    }
+    public function getExt()
+    {
+        return $this->ext;
+    }
 
     /**
      * 获取文件路径
@@ -79,8 +92,9 @@ class WFile
      * @return bool
      */
     public function touch(){
-        if (file_exists( $this->__file_name))
+        if (file_exists( $this->__file_name)) {
             return true;
+        }
         $this->path->mkdir();
         $success    = touch( $this->__file_name );
         $this->size = file_exists( $this->__file_name ) ? filesize( $this->__file_name ) : 0;
@@ -107,8 +121,9 @@ class WFile
     public function copyTo($file_name, $rf = false)
     {
 
-        if ($file_name instanceof self)
+        if ($file_name instanceof self) {
             $file_name = $file_name->get();
+        }
 
         $file_name = str_replace("\\","/",$file_name);
         if (is_dir($file_name)) {
@@ -125,7 +140,7 @@ class WFile
         $file = new self($file_name);
         $file->path->mkdir();
 
-        return copy( $this->__file_name, $file_name );
+        return copy($this->__file_name, $file_name);
     }
 
     /**
@@ -137,11 +152,13 @@ class WFile
     public function moveTo($file_name, $rf = false)
     {
 
-        if ($file_name instanceof self)
+        if ($file_name instanceof self) {
             $file_name = $file_name->get();
+        }
 
-        if (file_exists($file_name) && !$rf)
+        if (file_exists($file_name) && !$rf) {
             return false;
+        }
 
         $file_name = str_replace("\\","/",$file_name);
         $file = new self($file_name);
@@ -166,28 +183,31 @@ class WFile
     public function write($content, $append = true, $lock_wait_timeout = 3 /*秒*/)
     {
         try {
-            $this->touch();
-
-            $mode = 'a+';
-            if (!$append)
-                $mode = 'w+';
-
-            //锁等待 最大时间三秒
-            $start_time = time();
-            while (!is_writable($this->__file_name)) {
-                usleep(1000);
-                if ((time()-$start_time) > $lock_wait_timeout) {
-                    break;
-                }
-            }
 
             if (!is_writable($this->__file_name)) {
                 return 0;
             }
 
+            $this->touch();
+
+            $mode = 'a+';
+            if (!$append) {
+                $mode = 'w+';
+            }
+
             $fp = fopen($this->__file_name, $mode);
             if ($fp) {
-                flock($fp, LOCK_EX);// 加锁
+                //flock($fp, LOCK_EX);// 加锁
+
+                //锁等待 最大时间三秒
+                $start_time = time();
+                while (!flock($fp, LOCK_EX)) {
+                    usleep(1000);
+                    if ((time()-$start_time) > $lock_wait_timeout) {
+                        break;
+                    }
+                }
+
                 $success = fwrite($fp, $content);
                 flock($fp, LOCK_UN);// 解锁
                 fclose($fp);
@@ -226,21 +246,37 @@ class WFile
      *
      * @return string
      */
-    public function read()
+    public function read($lock = false)
     {
 
-        $fh      = fopen( $this->__file_name, 'r');
-        $content = "";
+        try {
+            $fh = fopen($this->__file_name, 'r');
+            $content = "";
 
-        if ($fh) {
-            flock($fh, LOCK_EX);// 加锁
-            while (!feof($fh)) {
-                $content .= fgets($fh);
+            if ($fh) {
+
+                if ($lock && !flock($fh, LOCK_EX)) {// 加锁
+                    fclose($fh);
+                    return null;
+                }
+
+                while (!feof($fh)) {
+                    $content .= fgets($fh);
+                }
+
+                if ($lock) {// 解锁
+                    flock($fh, LOCK_UN);
+                }
+
+                fclose($fh);
+            } else {
+                return null;
             }
-            flock($fh, LOCK_UN);// 解锁
-            fclose($fh);
+            return $content;
+        } catch(\Exception $e) {
+            var_dump($e);
+            return null;
         }
-        return $content;
     }
 
 }

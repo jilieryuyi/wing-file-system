@@ -26,11 +26,13 @@ class WDir
      */
     public function __construct($path)
     {
-        if ($path instanceof self)
-            $path = $path->get();
+        if ($path instanceof self) {
+            $path = $path->getDir();
+        }
 
         $path = str_replace("\\","/",$path);
-        $info = pathinfo( $path );
+        $path = rtrim($path,"/");
+        $info = pathinfo($path);
 
         $this->dir_name = $info["basename"];
         $this->__path   = $path;
@@ -47,6 +49,10 @@ class WDir
     {
         return $this->__path;
     }
+    public function getDir()
+    {
+        return $this->__path;
+    }
 
     /**
      * 判断目录是否可写
@@ -60,10 +66,12 @@ class WDir
 
     /**
      * 魔术方法，返回path对象
+     *
+     * @return self use like $this->path
      */
-    public function __get( $name )
+    public function __get($name)
     {
-        if ($name == "path")
+        if ($name == "path" && !$this->path)
             $this->path = new WDir($this->__info["dirname"]);
         return $this->path;
     }
@@ -76,8 +84,9 @@ class WDir
      */
     public function mkdir()
     {
-        if (is_dir($this->__path))
+        if (is_dir($this->__path)) {
             return true;
+        }
 
         $path  = $this->__path;
         $path  = str_replace("\\","/",$path);
@@ -85,21 +94,24 @@ class WDir
         $path  = trim($path,"/");
         $paths = explode("/",$path);
 
-        if ($spath == "/" )
+        if ($spath == "/") {
             $temp  = "/".$paths[0];
-        else
+        } else {
             $temp  = $paths[0];
+        }
 
         for ($i = 1; $i < count($paths); $i++) {
-            if (!is_dir($temp)){
-                if (!mkdir($temp))
+            if (!is_dir($temp)) {
+                if (!mkdir($temp)) {
                     return false;
+                }
             }
             $temp = $temp."/".$paths[$i];
         }
         if (!is_dir($temp)) {
-            if (!mkdir($temp))
+            if (!mkdir($temp)) {
                 return false;
+            }
         }
         return true;
     }
@@ -114,8 +126,9 @@ class WDir
     public function copyTo($target_path, $is_rf = false)
     {
 
-        if ($target_path instanceof self)
-            $target_path = $target_path->get();
+        if ($target_path instanceof self) {
+            $target_path = $target_path->getDir();
+        }
 
         if (!is_dir($target_path)) {
             $dir = new self($target_path);
@@ -139,13 +152,20 @@ class WDir
             foreach (glob($v) as $item) {
                 if (is_dir($item)) {
                     $path[] = $item . '/*';
-                    $item   = str_replace(str_replace("\\","/",$copy_path),"", str_replace("\\","/",$item));
+                    $item   = str_replace(
+                        str_replace("\\","/",$copy_path),
+                        "",
+                        str_replace("\\","/",$item)
+                    );
                     if (!is_dir($target_path.$item)) {
                         mkdir($target_path.$item);
                     }
-                }
-                elseif (is_file($item)) {
-                    $target_item = $target_path.str_replace(str_replace("\\","/",$copy_path),"", str_replace("\\","/",$item));
+                } elseif (is_file($item)) {
+                    $target_item = $target_path.str_replace(
+                            str_replace("\\","/",$copy_path),
+                            "",
+                            str_replace("\\","/",$item)
+                        );
                     if (file_exists($target_item)) {
                         if( $is_rf ) {
                             copy($item, $target_item);
@@ -171,13 +191,15 @@ class WDir
     public function moveTo($target_path, $is_rf = false)
     {
 
-        if ($target_path instanceof self)
-            $target_path = $target_path->get();
+        if ($target_path instanceof self) {
+            $target_path = $target_path->getDir();
+        }
 
         if (!is_dir($target_path)) {
             $dir = new self($target_path);
-            if (!$dir->mkdir())
+            if (!$dir->mkdir()) {
                 return false;
+            }
             unset($dir);
         }
         $copy_path   = $this->__path;
@@ -193,13 +215,21 @@ class WDir
             foreach (glob($v) as $item) {
                 if (is_dir($item)) {
                     $path[] = $item . '/*';
-                    $item   = str_replace(str_replace("\\","/",$copy_path),"", str_replace("\\","/",$item));
+                    $item   = str_replace(
+                        str_replace("\\","/",$copy_path),
+                        "",
+                        str_replace("\\","/",$item)
+                    );
                     if(!is_dir($target_path.$item)) {
                         mkdir($target_path.$item);
                     }
                 }
                 elseif (is_file($item)) {
-                    $target_item = $target_path.str_replace(str_replace("\\","/",$copy_path),"", str_replace("\\","/",$item));
+                    $target_item = $target_path.str_replace(
+                            str_replace("\\","/",$copy_path),
+                            "",
+                            str_replace("\\","/",$item)
+                        );
                     if( (file_exists($target_item) && $is_rf) || !file_exists($target_item)) {
                         rename($item, $target_item);
                     }
@@ -247,8 +277,7 @@ class WDir
             foreach(glob($v) as $item) {
                 if (is_dir($item)) {
                     $path[] = $item . '/*';
-                }
-                elseif (is_file($item)) {
+                } elseif (is_file($item)) {
                     $files[] = $item;
                 }
             }
