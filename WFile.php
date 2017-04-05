@@ -92,12 +92,12 @@ class WFile
      * @return bool
      */
     public function touch(){
-        if (file_exists( $this->__file_name)) {
+        if (file_exists($this->__file_name)) {
             return true;
         }
         $this->path->mkdir();
-        $success    = touch( $this->__file_name );
-        $this->size = file_exists( $this->__file_name ) ? filesize( $this->__file_name ) : 0;
+        $success    = touch($this->__file_name);
+        $this->size = file_exists($this->__file_name) ? filesize($this->__file_name) : 0;
         return $success;
     }
 
