@@ -137,8 +137,6 @@ class WDir
             unset($dir);
         }
         $copy_path   = $this->__path;
-        $copy_path   = str_replace("\\","/",$copy_path);
-        $copy_path   = rtrim($copy_path,"/");
         $target_path = str_replace("\\","/",$target_path);
         $target_path = rtrim($target_path,"/");
 
@@ -203,8 +201,6 @@ class WDir
             unset($dir);
         }
         $copy_path   = $this->__path;
-        $copy_path   = str_replace("\\","/",$copy_path);
-        $copy_path   = rtrim($copy_path,"/");
         $target_path = str_replace("\\","/",$target_path);
         $target_path = rtrim($target_path,"/");
 
