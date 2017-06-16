@@ -238,6 +238,8 @@ class WFile
      */
     public function delete()
     {
+        if (!file_exists($this->__file_name))
+            return false;
         return unlink($this->__file_name);
     }
 
