@@ -175,6 +175,7 @@ class WFile
     /**
      * 写入文件
      *
+     * @throws \Exception
      * @param string $content 写入内容
      * @param bool $append 是否追加写入，默认为true，追加写入
      * @param int $lock_wait_timeout 锁等待超时时间
@@ -184,11 +185,11 @@ class WFile
     {
         try {
 
-            if (!is_writable($this->__file_name)) {
-                return 0;
-            }
-
             $this->touch();
+
+            if (!is_writable($this->__file_name)) {
+                throw new \Exception("file is not writable ".$this->__file_name);
+            }
 
             $mode = 'a+';
             if (!$append) {
@@ -234,18 +235,21 @@ class WFile
     /**
      * 删除文件
      *
+     * @throws \Exception
      * @return bool
      */
     public function delete()
     {
-        if (!file_exists($this->__file_name))
-            return false;
+        if (!file_exists($this->__file_name)) {
+            throw new \Exception("file not found ".$this->__file_name);
+        }
         return unlink($this->__file_name);
     }
 
     /**
      * 读取文件
      *
+     * @throws \Exception
      * @return string
      */
     public function read($lock = false)
@@ -253,8 +257,9 @@ class WFile
 
         try {
 
-            if (!file_exists($this->__file_name))
-                return null;
+            if (!file_exists($this->__file_name)) {
+                throw new \Exception("file not found ".$this->__file_name);
+            }
 
             $fh = fopen($this->__file_name, 'r');
             $content = "";
