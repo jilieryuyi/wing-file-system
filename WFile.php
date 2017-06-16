@@ -250,6 +250,10 @@ class WFile
     {
 
         try {
+
+            if (!file_exists($this->__file_name))
+                return null;
+
             $fh = fopen($this->__file_name, 'r');
             $content = "";
 
