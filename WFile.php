@@ -235,13 +235,13 @@ class WFile
     /**
      * 删除文件
      *
-     * @throws \Exception
      * @return bool
      */
     public function delete()
     {
         if (!file_exists($this->__file_name)) {
-            throw new \Exception("file not found ".$this->__file_name);
+            return false;
+            //throw new \Exception("file not found ".$this->__file_name);
         }
         return unlink($this->__file_name);
     }
@@ -258,7 +258,7 @@ class WFile
         try {
 
             if (!file_exists($this->__file_name)) {
-                throw new \Exception("file not found ".$this->__file_name);
+                throw new \Exception("can not read, file not found ".$this->__file_name);
             }
 
             $fh = fopen($this->__file_name, 'r');
